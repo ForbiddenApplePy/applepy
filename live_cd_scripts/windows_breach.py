@@ -20,7 +20,7 @@ def parse(file_name):
 
 def look_for_windows(list):
     for drive in drives_list:
-        os.system('mount /dev/%s' % (drive))
+        os.system('mount /dev/%s /media/Windows' % (drive))
         print('Checking for Windows on '+drive+'...\n')
         if os.path.isdir('/media/Windows/Windows'):
             print('Found Windows in '+drive+' and mounted it at /media/Windows')
