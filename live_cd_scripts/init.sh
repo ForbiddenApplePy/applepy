@@ -1,3 +1,3 @@
 #! /bin/bash
 
-python live_cd_scripts/windows_breach.py
+python windows_breach.py
