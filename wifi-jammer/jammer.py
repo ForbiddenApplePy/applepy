@@ -5,12 +5,17 @@ from threading import Thread
 import time
 import os
 import sys
+import argparse
+
+parser = argparse.ArgumentParser(description='Jam WiFi network by sending deauth packet to client')
+parser.add_argument('IFACE', help='Network Interface to use', type=str)
+args = parser.parse_args()
 
 if os.geteuid() != 0:
     print("You should run this program as root")
     sys.exit(1)
 
-iface = 'wlan0'
+iface = args.IFACE
 networks = dict()
 
 
