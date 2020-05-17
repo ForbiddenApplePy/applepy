@@ -5,13 +5,21 @@ from threading import Thread, currentThread
 import time
 import os
 import sys
+import glob
 
 def check_perm():
     if os.geteuid() != 0:
         print("You should run this program as root")
         sys.exit(1)
 
-#iface=args.IFACE
+def get_own_mac() -> list:
+    mac_loc = glob.glob('/sys/class/net/**/address')
+    global unique
+    for mac_file in mac_loc:
+        with open(mac_file) as f:
+            unique.append(f.readline().replace('\n', ''))
+
+
 networks = dict()
 clients = []
 unique = []
@@ -41,10 +49,6 @@ class Network:
             elif self.bssid == couple[1]:
                 client_list.append(Client(self.bssid, couple[0]))
         return client_list
-
-def test(net) -> list:
-    global clients
-    return net.get_client_list(clients)
 
 def monitor(mode, iface):
     if mode == 'on':
@@ -78,7 +82,7 @@ def get_networks(iface) -> list:
     net_list = []
     channel_sweeper = Thread(target=channel_sweep, kwargs=dict(iface=iface))
     channel_sweeper.start()
-    sniff(prn=callback_ap, iface=iface, timeout=13)
+    sniff(prn=callback_ap, iface=iface, timeout=25)
     channel_sweeper.stop = False
     channel_sweeper.join(timeout=1)
 
@@ -152,5 +156,5 @@ def jam_network(target_list:list, iface, loop:int):
             for packet in packets:
                 sendp(packet, iface=iface)
                 time.sleep(1)
-    except:
-        pass
+    except KeyboardInterrupt:
+        sys.exit(1)

@@ -18,7 +18,6 @@ from modules.networksclients import *
 check_perm()
 monitor('on', iface=iface)
 
-
 try :
     ap_list = choose_from_networks(get_networks(iface=iface))
 except :
@@ -35,16 +34,21 @@ sniffer.daemon = True
 sniffer.start()
 
 sniffer.join()
-while True:
-    sniffer.start
-    clients = get_client()
-    print(clients)
-    client_list = []
-    for ap in ap_list:
-        client_list += ap.get_client_list(clients)
+try:    
+    while True:
+        sniffer.start
+        clients = get_client()
+        print(clients)
+        client_list = []
+        for ap in ap_list:
+            client_list += ap.get_client_list(clients)
+        try:
+            jam_network(client_list, iface=iface, loop=20)
+        except KeyboardInterrupt :
+            sys.exit(1)
+        sniffer.join()
+except KeyboardInterrupt :
+    sys.exit(1)
 
-    jam_network(client_list, iface=iface, loop=20)
-    sniffer.join()
 
-
-#monitor('off', iface=iface)
+monitor('off', iface=iface)
