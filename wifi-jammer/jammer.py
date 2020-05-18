@@ -18,11 +18,14 @@ from modules.networksclients import *
 check_perm()
 monitor('on', iface=iface)
 
+def shutdown(iface=iface):
+    monitor('off', iface)
+    sys.exit(1)
+
 try :
     ap_list = choose_from_networks(get_networks(iface=iface))
 except :
-    monitor('off', iface=iface)
-    sys.exit(1)
+    shutdown()
 
 chan_list = get_chan_list(ap_list)
 channel_sweeper = Thread(target=channel_sweep, kwargs=dict(chan_list=chan_list, iface=iface))
@@ -34,21 +37,17 @@ sniffer.daemon = True
 sniffer.start()
 
 sniffer.join()
-try:    
+try:
     while True:
         sniffer.start
         clients = get_client()
-        print(clients)
         client_list = []
         for ap in ap_list:
             client_list += ap.get_client_list(clients)
-        try:
-            jam_network(client_list, iface=iface, loop=20)
-        except KeyboardInterrupt :
-            sys.exit(1)
+        if jam_network(client_list, iface=iface, loop=20) == 1:
+            shutdown()
         sniffer.join()
 except KeyboardInterrupt :
-    sys.exit(1)
+    shutdown()
 
-
-monitor('off', iface=iface)
+shutdown()

