@@ -9,6 +9,7 @@ import sys
 import tty
 import termios
 from ptyprocess import PtyProcessUnicode
+import time
 
 host_key = paramiko.RSAKey(filename='key/id_rsa')
 killme = False
@@ -23,6 +24,7 @@ class Server(paramiko.ServerInterface):
          if username == 'test' and key == 'test':
             return paramiko.AUTH_SUCCESSFUL
          return paramiko.AUTH_FAILED
+
     #  def check_auth_publickey(self, username, key):
     #      if username == 'test' :
     #         print(key)
@@ -37,33 +39,52 @@ def listen(pty, chan):
         data = chan.recv(1024)
         print(data.decode(), end='')
 
-with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    s.bind(('127.0.0.1', 5002))
-    s.listen()
-    print('Listening')
-    client, addr = s.accept()
+def handle_client(client):
+    global host_key
+    with paramiko.Transport(client) as t:
+        t.load_server_moduli()
+        t.add_server_key(host_key)
+        server = Server()
+        t.start_server(server=server)
 
-with paramiko.Transport(client) as t:
-    t.load_server_moduli()
-    t.add_server_key(host_key)
-    server = Server()
-    t.start_server(server=server)
+        chan = t.accept(20)
 
-    chan = t.accept(20)
-    mfd, sfd = pty.openpty()
+        mfd, sfd = pty.openpty()
 
-    l = threading.Thread(target=listen, args=(mfd, chan,))
-    l.start()
+        l = threading.Thread(target=listen, args=(mfd, chan,))
+        l.start()
+        #input_loop(chan)
+        time.sleep(5)
+        chan.close()
 
+def input_loop(chan):
+    global killme
     orig_settings = termios.tcgetattr(sys.stdin)
     tty.setcbreak(sys.stdin)
-    while True:
-        x=sys.stdin.read(1)[0]
-        chan.send(x)
-
-
+    try :
+        while True:
+            if killme == True:
+                break
+            x=sys.stdin.read(1)[0]
+            chan.send(x)
+    except KeyboardInterrupt:
+        return
     termios.tcsetattr(sys.stdin, termios.TCSADRAIN, orig_settings)
-#    while True:
-        #chan.send(input())
 
+def run():
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        s.bind(('127.0.0.1', 5002))
+        s.listen()
+        print('Server active - listening for request')
+        client_list = []
+        thread_list = []
+        while True:
+        #for i in range(5):
+            client, addr = s.accept()
+            print(client)
+            client_list.append([client, addr])
+            print(client_list[-1][0])
+            thread_list.append(threading.Thread(target=handle_client, args=(client_list[-1][0],)))
+            thread_list[-1].start()
+        killme = True
