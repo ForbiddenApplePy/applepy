@@ -2,7 +2,6 @@
 
 import paramiko, os, socket, threading, pty, sys, tty
 import termios
-from ptyprocess import PtyProcessUnicode
 import time, datetime
 import queue
 from random import randint
