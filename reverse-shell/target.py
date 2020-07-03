@@ -7,4 +7,5 @@ def ibot():
     irc = Irclient()
     irc.connect()
 
-run_ssh()
+while True:
+    run_ssh()

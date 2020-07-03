@@ -61,8 +61,8 @@ key = paramiko.RSAKey.from_private_key(io.StringIO(privkey))
 def listen(pty, chan):
     while True:
         data = os.read(pty, 1024)
+        print(data)
         chan.send(data)
-        #chan.send(os.read(pty, 1024))
         time.sleep(0.25)
 
 def run_ssh():
@@ -85,8 +85,11 @@ def run_ssh():
                 listen_thread = Thread(target=listen, args=(mfd, chan), daemon=True)
                 listen_thread.start()
                 while True:
+                    if p.poll() is not None:
+                        break
                     if chan.recv_ready() is True:
                         data = chan.recv(1024)
+                        print(data)
                         if data == b'ping':
                             chan.send('pong')
                         os.write(mfd, data)
