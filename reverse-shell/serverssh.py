@@ -6,28 +6,38 @@ import time, datetime
 import queue
 from random import randint
 
-host_key = paramiko.RSAKey(filename='key/id_rsa')
+host_key = paramiko.RSAKey(filename='key/id_rsa-serv')
 killme = False
 clientlist = []
 port = 5002
 
-class Server(paramiko.ServerInterface):
-     def __init__(self):
-         self.event = threading.Event()
-     def check_channel_request(self, kind, chanid):
-         if kind == 'session':
-             return paramiko.OPEN_SUCCEEDED
-     def check_auth_password(self, username, key):
-         if username == 'test' and key == 'test':
-            return paramiko.AUTH_SUCCESSFUL
-         return paramiko.AUTH_FAILED
-        
+def cropkey(skey):
+    data = skey.key_blob.split(' ')[1]
+    print(data)
+    return data
 
-    #  def check_auth_publickey(self, username, key):
-    #      if username == 'test' :
-    #         print(key)
-    #         return paramiko.AUTH_SUCCESSFUL
-    #      return paramiko.AUTH_FAILED
+with open('./key/cli/id_rsa.pub','r') as kf:
+    ckey = paramiko.pkey.PublicBlob('ssh-rsa',kf.read().strip('\n'))
+check_key = cropkey(ckey)
+
+class Server(paramiko.ServerInterface):
+    def __init__(self):
+        self.event = threading.Event()
+    def check_channel_request(self, kind, chanid):
+        if kind == 'session':
+            return paramiko.OPEN_SUCCEEDED
+    def check_auth_password(self, username, key):
+        if username == 'test' and key == 'test':
+            return paramiko.AUTH_SUCCESSFUL
+        return paramiko.AUTH_FAILED
+    def check_auth_publickey(self, username, key):
+        print(check_key +'  '+key.get_base64())
+        if username == 'test' and key.get_base64() == check_key:
+            print('ouiiii')
+           #if key
+            return paramiko.AUTH_SUCCESSFUL
+        return paramiko.AUTH_FAILED
+
 
 class Client(threading.Thread):
     def __init__(self, client):
