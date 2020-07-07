@@ -1,3 +1,3 @@
 #! /bin/bash
 
-python windows_breach.py
+python os_scanner.py
